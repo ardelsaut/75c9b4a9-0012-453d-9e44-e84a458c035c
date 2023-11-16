@@ -1,0 +1,274 @@
+Clear-Host
+# Fonction pour obtenir $PSCommandPath
+Function Get-PSScriptPath {
+    if ([System.IO.Path]::GetExtension($PSCommandPath) -eq '.ps1') {
+        $psScriptPath = $PSCommandPath
+    }
+    else {
+        $psScriptPath = [System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName
+    }
+    return $psScriptPath
+}
+# On verifie que le script tourne bien avec les droits eleves
+$NewPSCommandPath = Get-PSScriptPath
+$scriptName = Split-Path -Path $NewPSCommandPath -Leaf
+$host.ui.RawUI.WindowTitle = "$scriptName"
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $isAdmin) {
+    Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$NewPSCommandPath`"" -Verb RunAs
+    exit
+}
+Clear-Host
+# Equivalent $PSScriptRoot
+$NewPSScriptRoot = if (-not $PSScriptRoot) { Split-Path -Parent (Convert-Path ([environment]::GetCommandLineArgs()[0])) } else { $PSScriptRoot }
+$NewPSScriptRoot | Out-Null
+# Début du log
+$NomFichierLog = Get-Date -Format "dd-MM-yy--HH.mm.ss"
+$pathFichierLog = "C:\Logs\$scriptName\$NomFichierLog.txt"
+# Start-Transcript -Path "$pathFichierLog" -Append -Force -IncludeInvocationHeader -UseMinimalHeader
+Start-Transcript -Path "$pathFichierLog" -Append -Force -IncludeInvocationHeader | Out-Null
+
+# Variable pour creer le chemin d'installation pour le fichier Nas
+$DossierNasSurHome = "$env:userprofile\Documents\1.Scripts\1.Nas"
+
+# Necessaire pour cacher les fichiers ou dossiers
+$attributes = [System.IO.FileAttributes]::Hidden
+
+# Fichier User
+$FichierUserDansDossierNas = "$DossierNasSurHome\user"
+
+# Fichier Passwd
+$FichierPasswdDansDossierNas = "$DossierNasSurHome\passwd"
+
+# On crée le dossier dans '$env:userprofile\Documents\1.Scripts\1.Nas'
+if (!(Test-Path -Path "$DossierNasSurHome" -ErrorAction SilentlyContinue)) {
+    New-Item "$DossierNasSurHome" -Type Directory -Force | Out-Null
+}
+
+
+# $Credentials = Get-Credential -UserName Nono -Message "Pour vous connnecter, il est necessaire que vous rentriez ces donnees"
+# $SecuredPassword = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Credentials.Password)
+# $UnsecurePassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($SecuredPassword)
+
+# $Credentials.UserName
+# $UnsecurePassword 
+
+# On crée le fichier user
+if (!(Test-Path -Path "$FichierUserDansDossierNas")) {
+    $userInput = $null
+    while ($null -eq $userInput) {
+        Add-Type -AssemblyName System.Windows.Forms
+        $form = New-Object System.Windows.Forms.Form
+        $form.Text = "Connection au nas"
+        $form.Size = New-Object System.Drawing.Size(350, 180)
+        $form.StartPosition = "CenterScreen"
+        $label = New-Object System.Windows.Forms.Label
+        $label.Location = New-Object System.Drawing.Point(10, 20)
+        $label.Size = New-Object System.Drawing.Size(280, 20)
+        $label.Text = "S'il-vous-plait, entrez votre Nom d'utilisateur:"
+        $form.Controls.Add($label)
+        $textBox = New-Object System.Windows.Forms.TextBox
+        $textBox.Location = New-Object System.Drawing.Point(10, 50)
+        $textBox.Size = New-Object System.Drawing.Size(280, 20)
+        $form.Controls.Add($textBox)
+        $button = New-Object System.Windows.Forms.Button
+        $button.Location = New-Object System.Drawing.Point(100, 90)
+        $button.Size = New-Object System.Drawing.Size(100, 30)
+        $button.Text = "Valider"
+        $button.DialogResult = [System.Windows.Forms.DialogResult]::OK
+        $form.AcceptButton = $button
+        $form.Controls.Add($button)
+        $result = $form.ShowDialog()
+        if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+            $userInput = $textBox.Text
+            $userInput > $FichierUserDansDossierNas
+        }
+        Start-Sleep -Milliseconds 500
+    }
+}
+$userInput = $null
+
+# On crée le fichier passwd
+if (!(Test-Path -Path "$FichierPasswdDansDossierNas")) {
+    $userInput = $null
+    while ($null -eq $userInput) {
+        Add-Type -AssemblyName System.Windows.Forms
+        $form = New-Object System.Windows.Forms.Form
+        $form.Text = "Connection au nas"
+        $form.Size = New-Object System.Drawing.Size(350, 180)
+        $form.StartPosition = "CenterScreen"
+        $label = New-Object System.Windows.Forms.Label
+        $label.Location = New-Object System.Drawing.Point(10, 20)
+        $label.Size = New-Object System.Drawing.Size(280, 20)
+        $label.Text = "S'il-vous-plait, entrez votre Mot de passe:"
+        $form.Controls.Add($label)
+        $textBox = New-Object System.Windows.Forms.TextBox
+        $textBox.Location = New-Object System.Drawing.Point(10, 50)
+        $textBox.Size = New-Object System.Drawing.Size(280, 20)
+        $form.Controls.Add($textBox)
+        $button = New-Object System.Windows.Forms.Button
+        $button.Location = New-Object System.Drawing.Point(100, 90)
+        $button.Size = New-Object System.Drawing.Size(100, 30)
+        $button.Text = "Valider"
+        $button.DialogResult = [System.Windows.Forms.DialogResult]::OK
+        $form.AcceptButton = $button
+        $form.Controls.Add($button)
+        $result = $form.ShowDialog()
+        if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+            $userInput = $textBox.Text
+            $userInput > $FichierPasswdDansDossierNas
+        }
+        Start-Sleep -Milliseconds 500
+    }
+}
+$userInput = $null
+
+# On recupere les infos pour pouvoir se connecter
+if (Test-Path -Path "$FichierUserDansDossierNas") {
+    $UserNas = Get-Content "$FichierUserDansDossierNas"
+    $CacherFichierUser = (Get-ItemProperty -Path "$FichierUserDansDossierNas").Attributes
+    $isHidden1 = $CacherFichierUser -band $attributes
+    if (!($isHidden1)) {
+        Set-ItemProperty -Path "$FichierUserDansDossierNas" -Name Attributes -Value $attributes
+    }
+}
+
+if (Test-Path -Path "$FichierPasswdDansDossierNas") {
+    $PasswordNas = Get-Content "$FichierPasswdDansDossierNas"
+    $CacherFichierUser = (Get-ItemProperty -Path "$FichierPasswdDansDossierNas").Attributes
+    $isHidden1 = $CacherFichierUser -band $attributes
+    if (!($isHidden1)) {
+        Set-ItemProperty -Path "$FichierPasswdDansDossierNas" -Name Attributes -Value $attributes
+    }
+
+}
+
+# On teste la connexion internet
+$pingTarget = "google.com"
+while ((Test-Connection -ComputerName $pingTarget -Count 1 -Quiet) -eq $false) {
+    Clear-Host
+    Write-Host "En attente d'une connexion Internet valide..."
+    Start-Sleep -Milliseconds "500"
+}
+
+# On se connecte au Nas
+$computer = "192.168.1.54"
+if ((Test-Path 'S:\', 'T:\', 'U:\', 'V:\', 'W:\', 'X:\', 'Y:\') -contains $false) {
+    $driveMappings = @{
+        'S:\' = 'Web_Packages'
+        'T:\' = 'Backup'
+        'U:\' = 'Downloads'
+        'V:\' = 'Drive'
+        'W:\' = 'Web'
+        'X:\' = 'Photo'
+        'Y:\' = 'Video'
+    }
+    foreach ($drive in $driveMappings.GetEnumerator()) {
+        $driveLetter = $drive.Key
+        $folderName = $drive.Value
+        if (Test-Path -LiteralPath $driveLetter) {
+            Write-Host "Dossier Nas - '$driveLetter' ($folderName) - trouve." -ForegroundColor Cyan
+        }
+        else {
+            Write-Host "Dossier Nas - '$driveLetter' ($folderName) - pas trouve!" -ForegroundColor Cyan
+            Write-Host "#####################################################"
+        }
+
+    }
+    Start-Sleep -Milliseconds "500"
+    Clear-Host
+    if (Test-Connection -ComputerName $computer -BufferSize 8 -Count 1 -ea 0 -Quiet) {
+        net use * /d /y | Out-Null
+        Write-Host "Nas trouve sur le reseau local" -ForegroundColor DarkYellow
+        foreach ($drive in $driveMappings.GetEnumerator()) {
+            $driveLetter = $drive.Key.TrimEnd('\')
+            $sharePath = "\\192.168.1.54\$($drive.Value)"
+
+            Write-Host "Lecteur $driveLetter ($($drive.Value))" -ForegroundColor Cyan
+            net use $driveLetter $sharePath /persistent:No /user:$UserNas $PasswordNas
+        }
+    }
+    else {
+        net use * /d /y | Out-Null
+        Write-Host "Nas non trouve, utlisation du reseau externe." -ForegroundColor DarkYellow
+        foreach ($drive in $driveMappings.GetEnumerator()) {
+            $driveLetter = $drive.Key.TrimEnd('\')
+            $sharePath = "\\nonobouli.myds.me\$($drive.Value)"
+            Write-Host "Lecteur $driveLetter ($($drive.Value))" -ForegroundColor Cyan
+            net use $driveLetter $sharePath /persistent:No /user:$UserNas $PasswordNas
+        }
+    }
+}
+else {
+    Write-Host "Le Nas est deja connecte, rien a faire!" -ForegroundColor Green
+}
+
+
+$PathApp = "$DossierNasSurHome\$scriptName"
+try {
+    $existingProperty = Get-ScheduledTask -TaskName "$scriptName" -ErrorAction Stop | Out-String
+}
+catch {
+    Write-Output "La Tache '$scriptName' n'existe pas."
+    $existingProperty = $null
+}
+if ($null -eq $existingProperty) {
+    $Action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-ExecutionPolicy Bypass -NoProfile -File $PathApp"
+    $triggers = @()
+    $Triggers = @(
+
+    #### Run atask on event 4626 
+        # $CIMTriggerClass = Get-CimClass -ClassName MSFT_TaskEventTrigger -Namespace Root/Microsoft/Windows/TaskScheduler:MSFT_TaskEventTrigger
+        # $trigger = New-CimInstance -CimClass $CIMTriggerClass -ClientOnly
+        # $trigger.Subscription = "<QueryList><Query Id='0' Path='Security'><Select Path='Security'>*[System[Provider [@Name='Microsoft-Windows-Security-Auditing'] and band(Keywords,4503599627370496) and EventID=4625]]</Select></Query></QueryList>"
+        # $trigger.Enabled = $True
+        # $trigger
+
+    #### Pas suppprimer, cest pour lancer la taches toutes les 30min
+        # $t1 = New-ScheduledTaskTrigger -Daily -DaysInterval "1"  -At "11am"
+        # $t3 = New-ScheduledTaskTrigger -Once -At 01:00 `
+        # -RepetitionInterval (New-TimeSpan -Minutes 30) `
+        # -RepetitionDuration (New-TimeSpan -Hours 23 -Minutes 55)
+        # $t1.Repetition = $t3.Repetition
+        # $t1
+    
+        New-ScheduledTaskTrigger -AtLogon
+    
+        )
+    $Settings = New-ScheduledTaskSettingsSet -Compatibility "Win8" -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -DontStopOnIdleEnd -ExecutionTimeLimit '00:05:00' -MultipleInstances 'IgnoreNew'
+    $Principal = New-ScheduledTaskPrincipal -UserID "$env:USERDOMAIN\$env:USERNAME" -LogonType ServiceAccount -RunLevel Highest
+    Register-ScheduledTask -TaskName "$scriptName" -TaskPath "\NonoOs" -Description "$scriptName - Voir fichiers logs" -Action $Action -Trigger $Triggers -Settings $Settings -Principal $Principal 
+}
+
+# On copie le fichier Nas dans le dossier Nas sur Home
+if (!(Test-Path -Path "$PathApp" -ErrorAction SilentlyContinue)) {
+    Copy-Item -Path "$NewPSCommandPath" -Destination "$PathApp" -Force
+}
+
+# On active EnableLinkedConnections pour voir les dossiers du Nas dans Explorer
+try {
+    $existingProperty = Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\" -Name "EnableLinkedConnections" -ErrorAction Stop
+}
+catch {
+    Write-Output "The 'EnableLinkedConnections' property does not exist."
+    $existingProperty = $null
+}
+if ($null -eq $existingProperty) {
+    New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "EnableLinkedConnections" -PropertyType DWord -Value '1' -Force
+    taskkill /f /im explorer.exe
+    Start-Process explorer.exe
+}
+
+TIMEOUT /T 3
+
+### Fin Script ###
+##################
+$directoryPath = "C:\Logs\$scriptName"
+$itemsToKeep = 9
+$items = Get-ChildItem -Path $directoryPath | Sort-Object CreationTime -Descending
+$itemsToRemove = $items.Count - $itemsToKeep
+if ($itemsToRemove -gt 0) {
+    $itemsToRemoveList = $items | Select-Object -Last $itemsToRemove
+    $itemsToRemoveList | Remove-Item -Force
+}
+Stop-Transcript | Out-Null
