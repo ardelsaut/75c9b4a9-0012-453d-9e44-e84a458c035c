@@ -23,7 +23,7 @@ $username = Split-Path -Path $inputString -Leaf
 Expand-Archive -Path "C:\Users\$username\AppData\Local\Temp\NonoOS\base.zip" -DestinationPath "C:\Users\$username\AppData\Local\Temp\NonoOS\test"
 Remove-Item -Path "C:\Users\$username\AppData\Local\Temp\NonoOS\base.zip" -Force
 
-Copy-Item -Path "C:\Users\$username\AppData\Local\Temp\NonoOS\test\ardelsaut-75c9b4a9-0012-453d-9e44-e84a458c035c-eb3b5d0\*" -Destination "C:\Users\$username\AppData\Local\Temp\NonoOS\Menus" -Force -Recurse
+Copy-Item -Path "C:\Users\$username\AppData\Local\Temp\NonoOS\test\ardelsaut-75c9b4a9-0012-453d-9e44-e84a458c035c-*\*" -Destination "C:\Users\$username\AppData\Local\Temp\NonoOS\Menus" -Force -Recurse
 
 Clear-Host
 Write-Host "Veuillez choisir le(s) script(s) a executer..." -ForegroundColor Cyan

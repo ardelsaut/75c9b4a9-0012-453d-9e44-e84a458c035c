@@ -1,2 +1,0 @@
-﻿write-host "hi"
-Pause
