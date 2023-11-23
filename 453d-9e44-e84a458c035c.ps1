@@ -5,7 +5,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Speech
 do {
     $f = New-Object System.Windows.Forms.OpenFileDialog
-    $test = Resolve-Path -Path "$env:TEMP\NonoOS"
+    $test = Resolve-Path -Path "$env:TEMP\NonoOS\Menus"
     $f.InitialDirectory = $test
     $f.Filter = "Fichiers Powershell(*.ps1)|*.ps1;|Tous les Fichiers (*.*)|*.*"
     $f.Multiselect = $true
