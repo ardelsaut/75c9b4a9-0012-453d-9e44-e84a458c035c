@@ -40,7 +40,7 @@ do {
         foreach ($p in $f.FileNames) {
             Clear-Host
             Write-Host "Lancement du script: $p" -ForegroundColor Yellow
-            Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File $p -WindowStyle Normal" -NoNewWindow
+            Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File $p -WindowStyle Normal" -NoNewWindow -Wait
             Write-Host "$p a ete execute." -ForegroundColor Yellow  -BackgroundColor DarkGreen
             $synth = New-Object -TypeName System.Speech.Synthesis.SpeechSynthesizer
             $synth.SelectVoice("Microsoft Zira Desktop")
