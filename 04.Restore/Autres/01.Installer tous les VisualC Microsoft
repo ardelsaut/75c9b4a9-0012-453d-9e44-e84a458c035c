@@ -1,0 +1,3 @@
+﻿Expand-Archive -Path "C:\Users\$username\AppData\Local\Temp\NonoOS\base.zip" -DestinationPath "C:\Users\$username\AppData\Local\Temp\NonoOS\test"
+cmd /c "V:\03.PC\01.WINDOWS\Nono_Script_Launcher\Exe_Files\Autres\4.VisualC\install_all.bat"
+ 
