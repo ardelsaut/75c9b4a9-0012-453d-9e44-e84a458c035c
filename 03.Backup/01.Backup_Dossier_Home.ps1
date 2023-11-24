@@ -59,4 +59,10 @@ $PathDossierConfigProgrammesNas = "V:\03.PC\01.WINDOWS\01.DOSSIERS_CONFIG\A_INST
 if (!(Test-Path -Path "$PathDossierConfigProgrammesNas\wt-config")) {New-Item -Path "$PathDossierConfigProgrammesNas" -Name "wt-config" -ItemType Directory -Force}
 XCOPY /Y /E /H "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json" "$PathDossierConfigProgrammesNas\wt-config\"
 XCOPY /Y /E /H "$env:APPDATA\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt" "$PathDossierConfigProgrammesNas\wt-config\"
+
+$nombreFichiers = 3
+$listeFichiers = Get-ChildItem "$DossierConfigBackupSurNas" -Filter "*.zip" | Where-Object { $_.Name -like "*$prefix*" } | Sort-Object CreationTime
+if ($listeFichiers.Count -gt $nombreFichiers) {
+$listeFichiers[0..($listeFichiers.Count - $nombreFichiers - 1)] | Remove-Item -Force
+}
  

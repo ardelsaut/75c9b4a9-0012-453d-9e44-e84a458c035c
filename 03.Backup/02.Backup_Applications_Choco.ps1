@@ -19,6 +19,8 @@ if ($listeFichiers.Count -gt $nombreFichiers) {
 $listeFichiers[0..($listeFichiers.Count - $nombreFichiers - 1)] | Remove-Item -Force
 }
 
+Start-Sleep -Seconds 2
+
 $DeleteConfigFiles = Get-ChildItem "$DestinationFolderChoco" -Filter "*.config"
 if ($DeleteConfigFiles) {
     foreach ($files in $DeleteConfigFiles){
