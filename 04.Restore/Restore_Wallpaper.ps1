@@ -1,7 +1,6 @@
-﻿$url = "$env:Temp\NonoOS\Menus\Wallpaper\windows 10.png"
+﻿$url = "$env:Temp\NonoOS\Menus\05.Autres\Wallpaper\windows 10.png"
 Set-MpPreference -ExclusionPath "$env:USERPROFILE\Pictures"
 $outputPath = "$env:USERPROFILE\Pictures\WALLPAPERS\windows 10.png"
-
 $webClient = New-Object System.Net.WebClient
 $webClient.DownloadFile($url, $outputPath)
 $setwallpapersrc = @"
