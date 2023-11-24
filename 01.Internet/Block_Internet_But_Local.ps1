@@ -1,0 +1,2 @@
+New-NetFirewallRule -DisplayName "InternetAccessBlock1" -Direction Outbound -Action Block -RemoteAddress "0.0.0.0-192.168.0.255"
+New-NetFirewallRule -DisplayName "InternetAccessBlock2" -Direction Outbound -Action Block -RemoteAddress "192.168.2.0-255.255.255.255"
