@@ -21,13 +21,13 @@ $listeFichiers[0..($listeFichiers.Count - $nombreFichiers - 1)] | Remove-Item -F
 
 Start-Sleep -Seconds 2
 
-$DeleteConfigFiles = Get-ChildItem "$DestinationFolderChoco" -Filter "*.config"
+$DeleteConfigFiles = (Get-ChildItem "$DestinationFolderChoco" -Filter "*.config").FullName
 if ($DeleteConfigFiles) {
     foreach ($files in $DeleteConfigFiles){
         Remove-Item -Path $files -Force
 }}
 
-$DeleteConfigFiles = Get-ChildItem "$DestinationFolderChoco" -Filter "*.backup"
+$DeleteConfigFiles = (Get-ChildItem "$DestinationFolderChoco" -Filter "*.backup").FullName
 if ($DeleteConfigFiles) {
     foreach ($files in $DeleteConfigFiles){
         Remove-Item -Path $files -Force
